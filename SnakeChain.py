@@ -6,8 +6,10 @@ import unittest
 
 def hash(block):
     sha256 = hashlib.sha256()
-    sha256.update(str(block.index) + str(block.timestamp) + 
-        str(block.data) + str(block.previous_hash))
+    sha256.update(str(block.index).encode('utf-8') + \
+        str(block.timestamp).encode('utf-8') + \
+        str(block.data).encode('utf-8') + \
+        str(block.previous_hash).encode('utf-8'))
     return sha256.hexdigest()
 
 def verify(block, previous):
@@ -28,40 +30,32 @@ class Block:
             '\nData: ' + str(self.data) + \
             '\nHash: ' + str(self.hash) + '\n'
 
-class Chain(list):
-    def __delitem__(self, index):
-        raise NotImplementedError
-
-    def __delslice__(self, index):
-        raise NotImplementedError
-
-    def __setitem__(self, index):
-        raise NotImplementedError
-
-    def __setslice__(self, index):
-        raise NotImplementedError
-
-    def insert(self):
-        raise NotImplementedError
-
-    def pop(self):
-        raise NotImplementedError
-
-    def remove(self):
-        raise NotImplementedError
+class Chain:
+    def __init__(self):
+        self.blockchain = []
+        genesis_block = Block(0, 'Genesis Block', '0')
+        self.blockchain.append(genesis_block)
 
     def __str__(self):
-        return "".join(str(block) for block in self)
+        ret = ''
+        for block in self.blockchain:
+            ret += str(block)
+        return ret
 
-if "__main__" == __name__:
+    def append(self, whattoappend):
+        new_block=Block(len(self.blockchain), whattoappend, self.blockchain[-1:][0].hash)
+        self.blockchain.append(new_block)
+
+if '__main__' == __name__:
     blockchain = Chain()
-    genesis_block = Block(0, "Genesis Block", "0")
-    blockchain.append(genesis_block)
-
-    new_block=Block(len(blockchain), "More data", blockchain[-1:][0].hash)
-    blockchain.append(new_block)
-
-    print str(blockchain)
+    while True:
+        whattodo = input('(a)ppend (p)rint (q)uit: ' )
+        if whattodo == 'a' or whattodo == 'append':
+            blockchain.append(input('enter the string to append: '))
+        elif whattodo == 'p' or whattodo == 'print':
+            print(blockchain)
+        elif whattodo == 'q' or whattodo == 'quit':
+            break;
 
 class TestSnakeChain(unittest.TestCase):
     def test_verify(self):
@@ -71,9 +65,3 @@ class TestSnakeChain(unittest.TestCase):
 
         new_block.hash = 'wrong'
         self.assertFalse(verify(new_block, genesis_block))
-
-    def test_NotImplemented(self):
-        blockchain = Chain()
-        blockchain.append(Block(0, "Genesis Block", "0"))
-        with self.assertRaises(NotImplementedError):
-            del blockchain[0]
